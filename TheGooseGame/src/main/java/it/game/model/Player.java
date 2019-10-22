@@ -1,15 +1,15 @@
 package it.game.model;
 
 public class Player {
-    private String nome;
+    private String name;
     private int step;
 
-    public Player(String nome) {
-        this.nome = nome;
+    public Player(String name) {
+        this.name = name;
     }
 
-    public String getNome() {
-        return nome;
+    public String getName() {
+        return name;
     }
 
     public int getStep() {
@@ -20,8 +20,8 @@ public class Player {
         this.step = step;
     }
 
-    public void setNome(String nome) {
-        this.nome = nome;
+    public void setName(String name) {
+        this.name = name;
     }
 
 

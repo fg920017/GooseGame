@@ -1,5 +1,6 @@
 package it.game;
 
+import it.game.model.Board;
 import it.game.model.Player;
 import it.game.services.GameService;
 import it.game.services.impl.GameServiceImpl;
@@ -7,7 +8,7 @@ import it.game.services.impl.GameServiceImpl;
 public class TestGame {
 
     public static void main(String args[]) {
-        GameService game = new GameServiceImpl();
+        GameService game = new GameServiceImpl(new Board(63));
         if (args.length != 0) {
             for(String arg:args){
                 game.addPlayer(new Player(arg));

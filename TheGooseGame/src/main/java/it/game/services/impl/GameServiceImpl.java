@@ -1,24 +1,28 @@
 package it.game.services.impl;
 
+import it.game.exception.PlayerNotFoundException;
+import it.game.model.Board;
+import it.game.model.Box;
 import it.game.model.Player;
 import it.game.services.GameService;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-
-import static it.game.services.GameService.MessageType.*;
 
 public class GameServiceImpl implements GameService {
     private ArrayList<Player> players = new ArrayList<>();
-
+    private Board board;
     private int indexPlayer = 0;
+
+    public GameServiceImpl(Board board) {
+        this.board = board;
+    }
 
     @Override
     public void addPlayer(Player newPlayer) {
-        Player alreadyExistingPlayer = players.stream().filter(persona -> persona.getNome().equalsIgnoreCase(newPlayer.getNome())).findAny().orElse(null);
+        Player alreadyExistingPlayer = players.stream().filter(persona -> persona.getName().equalsIgnoreCase(newPlayer.getName())).findAny().orElse(null);
         if (alreadyExistingPlayer != null) {
-            System.out.println(alreadyExistingPlayer.getNome() + ": already existing player ");
+            System.out.println(alreadyExistingPlayer.getName() + ": already existing player ");
             return;
         }
         players.add(newPlayer);
@@ -26,20 +30,25 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
-    public Player getPlayer(String name) {
-        return players.stream().filter(persona -> persona.getNome().equalsIgnoreCase(name)).findFirst().orElse(null);
+    public void movePlayer(String name, int dice1, int dice2) throws PlayerNotFoundException {
+        Player player = getPlayer(name);
+        updateStepPlayer(player, dice1, dice2);
     }
 
     @Override
-    public void movePlayer(Player player, int dice1, int dice2) {
-        int start = player.getStep();
-        updateStepPlayer(player, start, dice1, dice2);
+    public void movePlayer(String name) throws PlayerNotFoundException {
+        movePlayer(name, throwDice(), throwDice());
+    }
+
+    @Override
+    public void moveNextPlayer(int dice1, int dice2) {
+        Player player = players.get(indexPlayer);
+        updateStepPlayer(player, throwDice(), throwDice());
     }
 
     @Override
     public void moveNextPlayer() {
-        movePlayer(players.get(indexPlayer), throwDice(), throwDice());
-
+        moveNextPlayer(throwDice(), throwDice());
     }
 
     @Override
@@ -53,6 +62,10 @@ public class GameServiceImpl implements GameService {
         System.out.println("Ordine players: " + getAllPlayers());
     }
 
+    private Player getPlayer(String name) throws PlayerNotFoundException {
+        return players.stream().filter(persona -> persona.getName().equalsIgnoreCase(name)).findFirst().orElseThrow(() -> new PlayerNotFoundException(name));
+    }
+
     private int throwDice() {
         return (int) (Math.random() * 6) + 1;
     }
@@ -60,7 +73,7 @@ public class GameServiceImpl implements GameService {
     private String getAllPlayers() {
         StringBuilder allPlayers = new StringBuilder();
         for (int i = 0; i <= players.size() - 1; i++) {
-            allPlayers.append(players.get(i).getNome());
+            allPlayers.append(players.get(i).getName());
             if (players.size() != i + 1) {
                 allPlayers.append(", ");
             }
@@ -68,32 +81,37 @@ public class GameServiceImpl implements GameService {
         return allPlayers.toString();
     }
 
-    private void updateStepPlayer(Player player, int startPoint, int dice1, int dice2) {
-        int endPoint = startPoint + dice1 + dice2;
-        String descStart = startPoint == 0 ? "Start" : startPoint + "";
-        if (endPoint == toWin) {
-            print(WIN, player.getNome(), descStart, endPoint, dice1, dice2, null);
-        } else if (endPoint == bridgeFrom) {
-            endPoint = bridgeTo;
-            print(BRIDGE, player.getNome(), descStart, endPoint, dice1, dice2, null);
-        } else if (contains(endPoint)) {
-            print(STANDARD, player.getNome(), descStart, endPoint, dice1, dice2, ", The Goose. ");
-            while (contains(endPoint)) {
-                endPoint += dice1 + dice2;
-                print(GOOSE, player.getNome(), null, endPoint, null, null, contains(endPoint) ? ", The Goose. " : ". ");
-            }
-        } else if (endPoint > toWin) {
-            endPoint = toWin - (endPoint - toWin);
-            print(BOUNCES, player.getNome(), descStart, endPoint, dice1, dice2, null);
-        } else print(STANDARD, player.getNome(), descStart, endPoint, dice1, dice2, ". ");
-
-        Player occupiedBox = getOccupiedBox(endPoint);
-        if (occupiedBox != null) {
-            occupiedBox.setStep(startPoint);
-            print(OCCUPIED, null, descStart, endPoint, null, null, occupiedBox.getNome());
+    private int applyRole(Player player, int dice1, int dice2, int newIndex) {
+        if (newIndex == toWin) {
+            // print win
+            System.out.println(player.getName() + "wins");
+        } else if (newIndex > toWin) {
+            newIndex = toWin - (newIndex - toWin);
+            //print onbounced
         }
-        System.out.println();
-        player.setStep(endPoint);
+        Integer evaluateRole = board.getBox(newIndex).getRole().apply(dice1 + dice2);
+
+        if (!evaluateRole.equals(newIndex)) {
+            //print
+            //ricorsione
+            return applyRole(player, dice1, dice2, evaluateRole);
+        }
+        return evaluateRole;
+
+    }
+
+    private void updateStepPlayer(Player player, int dice1, int dice2) {
+        int actualIndex = player.getStep();
+        int newIndex = actualIndex + dice1 + dice2;
+
+       /* Box from = board.getBox(actualIndex);
+        Box to = board.getBox(newIndex);*/
+
+        newIndex = applyRole(player, dice1, dice2, newIndex);
+        player.setStep(newIndex);
+        //print move
+
+        handleAnotherPlayerInSameBox(player.getName(), actualIndex, newIndex);
         updateIndexPlayer();
     }
 
@@ -105,12 +123,13 @@ public class GameServiceImpl implements GameService {
         }
     }
 
-    private static boolean contains(final int key) {
-        return Arrays.stream(theGoose).anyMatch(i -> i == key);
-    }
-
-    private Player getOccupiedBox(final int end) {
-        return players.stream().filter(player1 -> player1.getStep() == end).findFirst().orElse(null);
+    private void handleAnotherPlayerInSameBox(String playerName, int actualIndex, int newIndex) {
+        players.stream().
+                filter(player1 -> player1.getStep() == newIndex && !player1.getName().equalsIgnoreCase(playerName)).
+                forEach(player -> {
+                    player.setStep(actualIndex);
+                    // print same box
+                });
     }
 
     private void print(MessageType type, String playerName, String from, Integer to, Integer dice1, Integer dice2, String description) {

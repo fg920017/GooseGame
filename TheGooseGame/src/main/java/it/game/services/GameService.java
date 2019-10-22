@@ -1,5 +1,6 @@
 package it.game.services;
 
+import it.game.exception.PlayerNotFoundException;
 import it.game.model.Player;
 
 public interface GameService {
@@ -19,11 +20,13 @@ public interface GameService {
 
     void addPlayer(Player newPlayer);
 
-    Player getPlayer(String name);
+    void movePlayer(String name, int dice1, int dice2) throws PlayerNotFoundException;
 
-    void movePlayer(Player player, int dice1, int dice2);
+    void movePlayer(String name) throws PlayerNotFoundException;
 
     void moveNextPlayer();
+
+    void moveNextPlayer(int dice1, int dice2);
 
     boolean isEnded();
 
