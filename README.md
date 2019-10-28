@@ -11,7 +11,13 @@
 
 * Once compiled the project, place yourself in the "target" folder, which contains the newly created jar, and execute the following command:
 <b>java -jar TheGooseGame.jar </b>. <br/>
-The game with 4 players will be simulated. <br/>
-Alternatively you can execute the same command by adding the names of the participants. Es: <b>java -jar TheGooseGame.jar Filippo Gianluca</b>
+
+The commands are: 
+
+* add player <PLAYER_NAME>: add player to game
+* move <PLAYER_NAME>: rolls two dice and moves the player
+* move <PLAYER_NAME> <DICE> <DICE> : moves the player, passing the dice
+* exit: exit the game. If one of the players reaches box 63 the game will end automatically
+
 
  
