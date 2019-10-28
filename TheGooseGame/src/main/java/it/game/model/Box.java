@@ -11,6 +11,7 @@ public abstract class Box {
         this.name = name;
         this.index = index;
     }
+
     public abstract Function<Integer, Integer> getRole();
 
     public String getName() {

@@ -1,6 +1,5 @@
 package it.game.model;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -8,9 +7,9 @@ import java.util.stream.IntStream;
 public class Board {
     private List<Box> listBox;
 
-    public Board(int max){
+    public Board(int max) {
         listBox = IntStream.rangeClosed(0, max).mapToObj(i -> {
-            switch (i){
+            switch (i) {
                 case 0:
                     return new DefaultBox("Start", 0);
                 case 6:
@@ -26,10 +25,10 @@ public class Board {
                     return new DefaultBox(Integer.toString(i), i);
             }
         }).collect(Collectors.toList());
-                //.collect(Collectors.collectingAndThen(Collectors.toList(), Collections::unmodifiableList));
+        //.collect(Collectors.collectingAndThen(Collectors.toList(), Collections::unmodifiableList));
     }
 
-    public Box getBox(Integer i){
+    public Box getBox(Integer i) {
         return listBox.get(i);
     }
 }

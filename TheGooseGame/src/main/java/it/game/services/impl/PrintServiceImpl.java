@@ -13,6 +13,11 @@ public class PrintServiceImpl implements PrintService {
     }
 
     @Override
+    public void onPlayerRolls(String playerName, int dice1, int dice2) {
+        printStream.print(playerName + " rolls " + dice1 + ", " + dice2 + ". ");
+    }
+
+    @Override
     public void onPlayerMoved(String playerName, Box from, Box to) {
         printStream.print(playerName
                 + " moves from "
@@ -39,4 +44,21 @@ public class PrintServiceImpl implements PrintService {
     public void onPlayerPrank(String playerJokedName, Box from, Box to) {
         printStream.print("On " + from.getName() + " there is " + playerJokedName + ", who returns to " + to.getName() + ". ");
     }
+
+    @Override
+    public void onPlayerAdded(String playerName) {
+        printStream.print("Added " + playerName + ". ");
+    }
+
+    @Override
+    public void onPlayerGoose(String playerName, Box to) {
+        printStream.print(playerName + " moves again and goes to " + to.getName() + ". ");
+    }
+
+    @Override
+    public void printAllPlayers(String players) {
+        printStream.println("Players: " + players);
+    }
+
+
 }

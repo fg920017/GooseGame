@@ -1,28 +1,42 @@
 package it.game;
 
+import it.game.cli.CommandExecutor;
+import it.game.cli.exception.CommandNotFoundException;
+import it.game.cli.exception.GameStoppedException;
+import it.game.cli.exception.MalformedCommandException;
 import it.game.model.Board;
-import it.game.model.Player;
 import it.game.services.GameService;
 import it.game.services.impl.GameServiceImpl;
+
+import java.util.Scanner;
 
 public class TestGame {
 
     public static void main(String args[]) {
         GameService game = new GameServiceImpl(new Board(63));
-        if (args.length != 0) {
-            for(String arg:args){
-                game.addPlayer(new Player(arg));
-            }
-        } else {
-            game.addPlayer(new Player("Marco"));
-            game.addPlayer(new Player("Francesco"));
-            game.addPlayer(new Player("Antonio"));
-            game.addPlayer(new Player("Marco"));
-            game.addPlayer(new Player("Giuseppe"));
-        }
-        game.extractionPlayers();
-        while (!game.isEnded()) {
-            game.moveNextPlayer();
+        CommandExecutor commandExecutor = new CommandExecutor(game);
+
+        try (Scanner scanner = new Scanner(System.in)) {
+            boolean continueGame = true;
+            do {
+                System.out.print("Type command: ");
+                String command = scanner.nextLine();
+                try {
+                    commandExecutor.executeGameCommand(command);
+                    continueGame = !game.isEnded();
+                } catch (CommandNotFoundException cnfe) {
+                    System.out.println(cnfe.getMessage());
+                } catch (GameStoppedException gse) {
+                    continueGame = false;
+                } catch (MalformedCommandException mce) {
+                    System.out.println(mce.getMessage());
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
+                    continueGame = false;
+                }
+
+                System.out.println();
+            } while (continueGame);
         }
     }
 
